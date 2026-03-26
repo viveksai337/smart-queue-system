@@ -127,4 +127,9 @@ const startServer = async () => {
     }
 };
 
-startServer();
+// Only start server when run directly (not when imported by serverless wrapper)
+if (require.main === module) {
+    startServer();
+}
+
+module.exports = { app, startServer };

@@ -33,7 +33,10 @@ if (useMySQL) {
     );
 } else {
     // SQLite fallback for demo
-    const dbPath = path.join(__dirname, '..', 'sqms_demo.sqlite');
+    const isNetlify = process.env.NETLIFY || process.env.AWS_LAMBDA_FUNCTION_NAME;
+    const dbPath = isNetlify
+        ? '/tmp/sqms_demo.sqlite'
+        : path.join(__dirname, '..', 'sqms_demo.sqlite');
     sequelize = new Sequelize({
         dialect: 'sqlite',
         storage: dbPath,
