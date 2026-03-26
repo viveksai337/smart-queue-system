@@ -1,37 +1,50 @@
 const serverless = require('serverless-http');
 const path = require('path');
 
-// Set up environment for the backend
+// Set environment
 process.env.NODE_ENV = process.env.NODE_ENV || 'production';
+process.env.JWT_SECRET = process.env.JWT_SECRET || 'sqms_super_secret_key_netlify_2024';
+process.env.FRONTEND_URL = process.env.URL || 'https://sqms-smart-queue.netlify.app';
 
-// Import the Express app and startup function
-const { app, startServer } = require(path.join(__dirname, '..', '..', 'backend', 'server'));
+// Import the Express app
+const { app, startServer } = require('../../backend/server');
 
 let isInitialized = false;
 
 const initializeApp = async () => {
     if (!isInitialized) {
-        await startServer().catch(err => {
-            console.error('Init error:', err);
-        });
-        isInitialized = true;
-        console.log('✅ Netlify Function initialized');
+        try {
+            await startServer();
+            isInitialized = true;
+            console.log('✅ Netlify Function initialized successfully');
+        } catch (err) {
+            console.error('❌ Init error:', err.message);
+            // Don't throw - let the app try to serve anyway
+            isInitialized = true;
+        }
     }
 };
 
-// Create serverless handler - strip the /.netlify/functions/api prefix
+// Create serverless handler
 const handler = serverless(app, {
     basePath: '/.netlify/functions/api',
 });
 
-// Export the handler with initialization
 exports.handler = async (event, context) => {
-    // Prevent Lambda from waiting for event loop to empty
     context.callbackWaitsForEmptyEventLoop = false;
 
-    // Initialize on first call (cold start)
-    await initializeApp();
-
-    // Handle the request
-    return handler(event, context);
+    try {
+        await initializeApp();
+        return await handler(event, context);
+    } catch (error) {
+        console.error('Function error:', error);
+        return {
+            statusCode: 500,
+            body: JSON.stringify({
+                success: false,
+                message: 'Server error',
+                error: error.message,
+            }),
+        };
+    }
 };

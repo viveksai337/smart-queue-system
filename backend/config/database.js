@@ -55,7 +55,7 @@ const connectDB = async () => {
         console.log(`✅ Database connected successfully (${useMySQL ? 'MySQL' : 'SQLite'})`);
     } catch (error) {
         console.error('❌ Database connection failed:', error.message);
-        process.exit(1);
+        throw error;
     }
 };
 

@@ -123,7 +123,8 @@ const startServer = async () => {
         });
     } catch (error) {
         console.error('❌ Server startup failed:', error);
-        process.exit(1);
+        if (require.main === module) process.exit(1);
+        throw error;
     }
 };
 
